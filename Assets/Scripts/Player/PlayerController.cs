@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
 
-    [SerializeField] private float speed = 10;
+    [SerializeField] private int speed = 10;
     [SerializeField] private Vector2 playerVelocity;
     private Rigidbody2D rb;
     private CoinBehaviour currentCoin;
@@ -33,6 +33,18 @@ public class PlayerController : MonoBehaviour
         this.rb.velocity = this.playerVelocity;
     }
 
+
+    #region Stats
+
+    public void UpgradeSpeed()
+    {
+        this.speed++;
+    }
+
+    #endregion
+
+    #region Collisions
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.tag == "Coin") {
@@ -44,5 +56,20 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Get&Set
+    public int GetSpeed()
+    {
+        return this.speed;
+    }
+
+    public void SetSpeed(int value)
+    {
+        this.speed = value;
+    }
+
+
+    #endregion
 
 }

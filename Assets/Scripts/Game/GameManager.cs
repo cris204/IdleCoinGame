@@ -16,18 +16,37 @@ public class GameManager : MonoBehaviour
         }
     }
 
-
-
     [Header("Coins")]
     [SerializeField] private TextMeshProUGUI coinsTxt;
-    private float coins;
+    private int coins;
 
     [Header("Spawn")]
     private Vector2 size = new Vector2(24,24) ;
     private Vector2 currentPositionToSpawn;
     private GameObject currentCoin;
-    private float spawnDelay = 5;
     private float timeElapsed = 5;
+
+    [Header("Player")]
+    [SerializeField] private PlayerController player;
+
+    [Header("Buy Speed")]
+    [SerializeField] private TextMeshProUGUI speedTxt;
+    [SerializeField] private TextMeshProUGUI speedCostTxt;
+    private int upgradeSpeedCost = 4;
+
+    [Header("Buy Multiplier")]
+    [SerializeField] private TextMeshProUGUI multiplierTxt;
+    [SerializeField] private TextMeshProUGUI multiplierCostTxt;
+    private int multiplierCost = 4;
+    private int coinMutiplier = 1;
+
+    [Header("Buy SpawnRate")]
+    [SerializeField] private TextMeshProUGUI spawnRateTxt;
+    [SerializeField] private TextMeshProUGUI spawnRateCostTxt;
+    private int spawnRateCost = 4;
+    private float spawnRate = 1;
+
+
 
     private void Awake()
     {
@@ -40,7 +59,9 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        
+        this.UpdateSpeedTxt();
+        this.UpdateMultiplierTxt();
+        this.UpdateSpawnRateTxt();
     }
 
     void Update()
@@ -48,16 +69,42 @@ public class GameManager : MonoBehaviour
         this.SpawnCoins();
     }
 
-    private void UpdateCoinsTxt()
+    public void GainCoin()
     {
-        this.coinsTxt.text = string.Format("Coins: {0}", coins);
+        this.coins += 1 * this.coinMutiplier;
+        this.UpdateCoinsTxt();
     }
 
+    #region UpdateUI
+
+    private void UpdateCoinsTxt()
+    {
+        this.coinsTxt.text = string.Format("Coins: {0}", this.coins);
+    }
+
+    private void UpdateSpeedTxt()
+    {
+        this.speedTxt.text = string.Format("UFO Speed: {0}", this.player.GetSpeed());
+        this.speedCostTxt.text= string.Format("Cost: {0}", this.upgradeSpeedCost);
+    }
+    private void UpdateMultiplierTxt()
+    {
+        this.multiplierTxt.text = string.Format("Coin \nMultiplier: {0}", this.coinMutiplier);
+        this.multiplierCostTxt.text = string.Format("Cost: {0}", this.multiplierCost);
+    }
+
+    private void UpdateSpawnRateTxt()
+    {
+        this.spawnRateTxt.text = string.Format("Spawn \nRate: {0}", this.spawnRate);
+        this.spawnRateCostTxt.text = string.Format("Cost: {0}", this.spawnRateCost);
+    }
+
+    #endregion
 
     #region SpawnCoins
     private void SpawnCoins()
     {
-        if (this.timeElapsed >= this.spawnDelay) {
+        if (this.timeElapsed >= this.spawnRate) {
             currentPositionToSpawn = new Vector2(Random.Range(-size.x / 2, size.x / 2), Random.Range(-size.y / 2, size.y / 2));
             this.currentCoin = CoinPool.Instance.GetCoin();
             this.currentCoin.transform.position = currentPositionToSpawn;
@@ -67,20 +114,84 @@ public class GameManager : MonoBehaviour
     }
     #endregion
 
+    #region ButtonsEvents (Buy stats)
 
-    #region Get&Set
-    public float Coins
+    public void BuyUFOSpeed()
     {
-        get
-        {
-            return coins;
+        if (this.coins >= this.upgradeSpeedCost) {
+            this.player.UpgradeSpeed();
+            this.SetCoins(this.coins - this.upgradeSpeedCost);
+            
+            this.upgradeSpeedCost++;
+            this.UpdateCoinsTxt();
+            this.UpdateSpeedTxt();
+
+        } else {
+            Debug.LogError("Can't upgrade the speed");
         }
     }
 
-    public void GainCoin()
+    public void BuyMultiplier()
     {
-        this.coins++;
-        this.UpdateCoinsTxt();
+        if (this.coins >= this.multiplierCost) {
+            this.coinMutiplier++;
+            this.SetCoinMultiplier(this.coinMutiplier);
+            this.SetCoins(this.coins - this.multiplierCost);
+
+            this.multiplierCost++;
+            this.UpdateCoinsTxt();
+            this.UpdateMultiplierTxt();
+        } else {
+            Debug.LogError("Can't upgrade the multiplier");
+        }
+    }
+
+    public void BuyUpgradeSpawnRate()
+    {
+        if (this.coins >= this.spawnRateCost) {
+            this.spawnRate-=0.5f;
+            this.SetSpawnRate(this.spawnRate);
+            this.SetCoins(this.coins - this.spawnRateCost);
+
+            this.spawnRateCost++;
+            this.UpdateCoinsTxt();
+            this.UpdateSpawnRateTxt();
+        } else {
+            Debug.LogError("Can't upgrade the Spawn Rate");
+        }
+    }
+
+    #endregion
+
+    #region Get&Set
+    public int GetCoins()
+    {
+        return coins;
+    }
+
+    public void SetCoins(int value)
+    {
+        this.coins = value;
+    }
+
+    public int GetCoinMutiplier()
+    {
+        return coinMutiplier;
+    }
+
+    public void SetCoinMultiplier(int value)
+    {
+        this.coinMutiplier = value;
+    }
+
+    public float GetSpawnRate()
+    {
+        return this.spawnRate;
+    }
+
+    public void SetSpawnRate(float value)
+    {
+        this.spawnRate = value;
     }
 
     #endregion
