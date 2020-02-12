@@ -47,14 +47,12 @@ public class CoinPool : MonoBehaviour
     public void ReleaseCoin(GameObject coin)
     {
         coin.gameObject.SetActive(false);
-        coin.GetComponent<Rigidbody2D>().velocity = Vector2.zero;    
-
         coins.Add(coin);
     }
 
     private void AddCoin()
     {
-        GameObject instance = Instantiate(coinObject, transform);
+        GameObject instance = Instantiate(coinObject);
 		instance.transform.position=this.transform.position;
         instance.gameObject.SetActive(false);
         coins.Add(instance);
@@ -62,9 +60,9 @@ public class CoinPool : MonoBehaviour
 
     private GameObject AllocateCoin()
     {
-        GameObject bullet = coins[coins.Count - 1];
+        GameObject coin = coins[coins.Count - 1];
         coins.RemoveAt(coins.Count - 1);
-        bullet.gameObject.SetActive(true);
-        return bullet;
+        coin.gameObject.SetActive(true);
+        return coin;
     }
 }

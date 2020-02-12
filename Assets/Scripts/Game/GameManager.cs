@@ -16,12 +16,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private const int START_ITEMS_COST = 4; 
+    private const int START_MULTIPLIER_VALUE = 1; 
+    private const int START_SPAWN_RATE_VALUE = 3; 
+    private const int START_COINS_VALUE = 0; 
+
     [Header("Coins")]
     [SerializeField] private TextMeshProUGUI coinsTxt;
     private int coins;
 
     [Header("Spawn")]
-    private Vector2 size = new Vector2(24,24) ;
+    private Vector2 size = new Vector2(24,24);
     private Vector2 currentPositionToSpawn;
     private GameObject currentCoin;
     private float timeElapsed = 5;
@@ -32,19 +37,28 @@ public class GameManager : MonoBehaviour
     [Header("Buy Speed")]
     [SerializeField] private TextMeshProUGUI speedTxt;
     [SerializeField] private TextMeshProUGUI speedCostTxt;
-    private int upgradeSpeedCost = 4;
+    [SerializeField] private Button buySpeedButton;
+    private bool hasMaxSpeedLevel;
+
+    private int upgradeSpeedCost;
 
     [Header("Buy Multiplier")]
     [SerializeField] private TextMeshProUGUI multiplierTxt;
     [SerializeField] private TextMeshProUGUI multiplierCostTxt;
-    private int multiplierCost = 4;
-    private int coinMutiplier = 1;
+    [SerializeField] private Button buyMultiplierButton;
+    private int multiplierCost;
+    private int coinMutiplier;
+    private int coinMutiplierMax = 10;
+    private bool hasMaxMultiplierLevel;
 
     [Header("Buy SpawnRate")]
     [SerializeField] private TextMeshProUGUI spawnRateTxt;
     [SerializeField] private TextMeshProUGUI spawnRateCostTxt;
-    private int spawnRateCost = 4;
-    private float spawnRate = 1;
+    [SerializeField] private Button buySpawnRateButton;
+    private int spawnRateCost;
+    private float spawnRate;
+    private float spawnRateMax = 0.4f;
+    private bool hasMaxSpawnRateLevel;
 
 
 
@@ -59,9 +73,19 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        this.coins = START_COINS_VALUE;
+        this.coinMutiplier = START_MULTIPLIER_VALUE;
+        this.spawnRate = START_SPAWN_RATE_VALUE;
+
+        this.upgradeSpeedCost = START_ITEMS_COST;
+        this.multiplierCost = START_ITEMS_COST;
+        this.spawnRateCost = START_ITEMS_COST;
+
+
         this.UpdateSpeedTxt();
         this.UpdateMultiplierTxt();
         this.UpdateSpawnRateTxt();
+        this.UpdateButtonsState();
     }
 
     void Update()
@@ -73,6 +97,7 @@ public class GameManager : MonoBehaviour
     {
         this.coins += 1 * this.coinMutiplier;
         this.UpdateCoinsTxt();
+        this.UpdateButtonsState();
     }
 
     #region UpdateUI
@@ -84,20 +109,69 @@ public class GameManager : MonoBehaviour
 
     private void UpdateSpeedTxt()
     {
-        this.speedTxt.text = string.Format("UFO Speed: {0}", this.player.GetSpeed());
-        this.speedCostTxt.text= string.Format("Cost: {0}", this.upgradeSpeedCost);
+        if (!this.hasMaxSpeedLevel) {
+            this.speedTxt.text = string.Format("UFO Speed: {0}", this.player.GetSpeed());
+            this.speedCostTxt.text = string.Format("Cost: {0}", this.upgradeSpeedCost);
+        } else {
+            this.speedTxt.text = "UFO Speed: Max";
+            this.speedCostTxt.text = "Max";
+        }
     }
     private void UpdateMultiplierTxt()
     {
-        this.multiplierTxt.text = string.Format("Coin \nMultiplier: {0}", this.coinMutiplier);
-        this.multiplierCostTxt.text = string.Format("Cost: {0}", this.multiplierCost);
+        if (!this.hasMaxMultiplierLevel) {
+            this.multiplierTxt.text = string.Format("Coin \nMultiplier: {0}", this.coinMutiplier);
+            this.multiplierCostTxt.text = string.Format("Cost: {0}", this.multiplierCost);
+        } else {
+            this.multiplierTxt.text = "Coin \nMultiplier: Max";
+            this.multiplierCostTxt.text = "Max";
+        }
     }
 
     private void UpdateSpawnRateTxt()
     {
-        this.spawnRateTxt.text = string.Format("Spawn \nRate: {0}", this.spawnRate);
-        this.spawnRateCostTxt.text = string.Format("Cost: {0}", this.spawnRateCost);
+        if (!this.hasMaxSpawnRateLevel) {
+            this.spawnRateTxt.text = string.Format("Spawn \nRate: {0}", this.spawnRate);
+            this.spawnRateCostTxt.text = string.Format("Cost: {0}", this.spawnRateCost);
+        } else {
+            this.spawnRateTxt.text = "Spawn \nRate: Max";
+            this.spawnRateCostTxt.text = "Max";
+        }
     }
+
+    private void UpdateButtonsState()
+    {
+        if (!this.hasMaxSpeedLevel) {
+            if (this.coins >= this.upgradeSpeedCost) {
+                this.buySpeedButton.interactable = true;
+            } else {
+                this.buySpeedButton.interactable = false;
+            }
+        } else {
+            this.buySpeedButton.interactable = false;
+        }
+
+        if (!this.hasMaxMultiplierLevel) {
+            if (this.coins >= this.multiplierCost) {
+                this.buyMultiplierButton.interactable = true;
+            } else {
+                this.buyMultiplierButton.interactable = false;
+            }
+        } else {
+            this.buyMultiplierButton.interactable = false;
+        }
+
+        if (!this.hasMaxSpawnRateLevel) {
+            if (this.coins >= this.spawnRateCost) {
+                this.buySpawnRateButton.interactable = true;
+            } else {
+                this.buySpawnRateButton.interactable = false;
+            }
+        } else {
+            this.buySpawnRateButton.interactable = false;
+        }
+    }
+
 
     #endregion
 
@@ -118,47 +192,98 @@ public class GameManager : MonoBehaviour
 
     public void BuyUFOSpeed()
     {
-        if (this.coins >= this.upgradeSpeedCost) {
-            this.player.UpgradeSpeed();
-            this.SetCoins(this.coins - this.upgradeSpeedCost);
-            
-            this.upgradeSpeedCost++;
-            this.UpdateCoinsTxt();
-            this.UpdateSpeedTxt();
+        AudioSourcePool.Instance.GetAudioSource().GetComponent<PlaySound>().PlayAudio("Click");
+        if (this.player.GetCanUpgradeSpeed()) {
+            if (this.coins >= this.upgradeSpeedCost) {
+                this.player.UpgradeSpeed();
+                this.SetCoins(this.coins - this.upgradeSpeedCost);
 
+                this.upgradeSpeedCost++;
+                this.UpdateCoinsTxt();
+
+                if (!this.player.GetCanUpgradeSpeed()) {
+                    this.hasMaxSpeedLevel = true;
+                    AudioSourcePool.Instance.GetAudioSource().GetComponent<PlaySound>().PlayAudio("MaxLevel");
+                }
+
+            }
         } else {
-            Debug.LogError("Can't upgrade the speed");
+            this.hasMaxSpeedLevel = true;
+            Debug.LogError("Speed is in Max Level");
         }
+        this.UpdateButtonsState();
+        this.UpdateSpeedTxt();
     }
 
     public void BuyMultiplier()
     {
-        if (this.coins >= this.multiplierCost) {
-            this.coinMutiplier++;
-            this.SetCoinMultiplier(this.coinMutiplier);
-            this.SetCoins(this.coins - this.multiplierCost);
+        AudioSourcePool.Instance.GetAudioSource().GetComponent<PlaySound>().PlayAudio("Click");
+        if (!this.hasMaxMultiplierLevel) {
+            if (this.coins >= this.multiplierCost) {
+                this.coinMutiplier++;
+                this.SetCoinMultiplier(this.coinMutiplier);
+                this.SetCoins(this.coins - this.multiplierCost);
 
-            this.multiplierCost++;
-            this.UpdateCoinsTxt();
-            this.UpdateMultiplierTxt();
+                this.multiplierCost++;
+                this.UpdateCoinsTxt();
+
+                if (this.coinMutiplier >= this.coinMutiplierMax) {
+                    this.hasMaxMultiplierLevel = true;
+                    AudioSourcePool.Instance.GetAudioSource().GetComponent<PlaySound>().PlayAudio("MaxLevel");
+                }
+            }
         } else {
-            Debug.LogError("Can't upgrade the multiplier");
+            Debug.LogError("multiplier is in Max Level");
         }
+        this.UpdateButtonsState();
+        this.UpdateMultiplierTxt();
     }
 
     public void BuyUpgradeSpawnRate()
     {
-        if (this.coins >= this.spawnRateCost) {
-            this.spawnRate-=0.5f;
-            this.SetSpawnRate(this.spawnRate);
-            this.SetCoins(this.coins - this.spawnRateCost);
+        AudioSourcePool.Instance.GetAudioSource().GetComponent<PlaySound>().PlayAudio("Click");
+        if (!this.hasMaxSpawnRateLevel) {
+            if (this.coins >= this.spawnRateCost) {
+                this.spawnRate -= 0.3f;
+                this.SetSpawnRate(this.spawnRate);
+                this.SetCoins(this.coins - this.spawnRateCost);
 
-            this.spawnRateCost++;
-            this.UpdateCoinsTxt();
-            this.UpdateSpawnRateTxt();
+                this.spawnRateCost++;
+                this.UpdateCoinsTxt();
+                if (this.spawnRate <= this.spawnRateMax) {
+                    this.hasMaxSpawnRateLevel = true;
+                    AudioSourcePool.Instance.GetAudioSource().GetComponent<PlaySound>().PlayAudio("MaxLevel");
+                }
+            }
         } else {
-            Debug.LogError("Can't upgrade the Spawn Rate");
+            Debug.LogError("Spawn Rate is in Max level");
         }
+        this.UpdateButtonsState();
+        this.UpdateSpawnRateTxt();
+    }
+
+    public void RestartValues()
+    {
+        AudioSourcePool.Instance.GetAudioSource().GetComponent<PlaySound>().PlayAudio("Click");
+        this.player.RestartSpeed(); // start value
+        this.coins = START_COINS_VALUE;
+        this.coinMutiplier = START_MULTIPLIER_VALUE;
+        this.spawnRate = START_SPAWN_RATE_VALUE;
+
+        this.upgradeSpeedCost = START_ITEMS_COST;
+        this.multiplierCost = START_ITEMS_COST;
+        this.spawnRateCost = START_ITEMS_COST;
+
+        this.hasMaxSpeedLevel = false;
+        this.hasMaxMultiplierLevel = false;
+        this.hasMaxSpawnRateLevel = false;
+
+        this.UpdateCoinsTxt();
+        this.UpdateSpeedTxt();
+        this.UpdateMultiplierTxt();
+        this.UpdateSpawnRateTxt();
+        this.UpdateButtonsState();
+
     }
 
     #endregion

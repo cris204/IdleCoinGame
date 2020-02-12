@@ -7,7 +7,7 @@ public class CoinBehaviour : MonoBehaviour
     
     public void ReturnToPool()
     {
-        Destroy(this.gameObject);
+        CoinPool.Instance.ReleaseCoin(this.gameObject);
     }
 
 
